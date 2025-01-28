@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const investorRoutes = require('./src/routes/investorRoutes');
 const agentRoutes = require('./src/routes/agentRoutes');
-const authRoutes = require('./src/routes/authRoutes')
+const propertyRoutes = require('./src/routes/propertyRoutes');
 
 
 const app = express();
@@ -24,7 +24,7 @@ app.use(express.json()); // Parser le body des requêtes en JSON
 //routes
 app.use('/api/investors', investorRoutes);
 app.use('/api/agents', agentRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/properties', propertyRoutes);
 
 
 // Lancement du serveur

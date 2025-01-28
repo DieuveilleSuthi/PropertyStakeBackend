@@ -17,8 +17,6 @@ const agentSchema = mongoose.Schema(
     { timestamps: true }
 );
 
-module.exports = mongoose.model('Agent', agentSchema);
-
 // Hash password before saving
 agentSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
@@ -30,3 +28,7 @@ agentSchema.pre('save', async function (next) {
 agentSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
+
+const Agent = mongoose.model('Agent', agentSchema);
+
+module.exports = Agent;
