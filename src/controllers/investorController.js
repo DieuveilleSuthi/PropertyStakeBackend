@@ -1,6 +1,7 @@
 const Investor = require('../models/investorsModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Créer un nouvel investisseur
 const createInvestor = async (req, res) => {
@@ -35,24 +36,47 @@ const getAllInvestors = async (req, res) => {
     }
 };
 
-// Ajouter des fonds au wallet
+// Créer un paiement Stripe et recharger le wallet
 const rechargeWallet = async (req, res) => {
     const { id } = req.params;
-    const { amount } = req.body;
-  
+    const { amount } = req.body;  // We will use the amount only for the Checkout session
+
     try {
-      const investor = await Investor.findById(id).populate('wallet');
-      if (!investor) return res.status(404).json({ message: 'Investor not found' });
-  
-      investor.wallet.balance += amount;
-      investor.wallet.transactions.push({ type: 'recharge', amount });
-      await investor.wallet.save();
-  
-      res.status(200).json(investor.wallet);
+        // Find the investor from the database
+        const investor = await Investor.findById(id);
+        if (!investor) return res.status(404).json({ message: 'Investor not found' });
+
+        // Create a Checkout session
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],  // Payment method type (only card in this case)
+            line_items: [
+                {
+                    price_data: {
+                        currency: 'usd',  // Currency of the payment
+                        product_data: {
+                            name: 'Wallet Recharge',  // Description of the product
+                        },
+                        unit_amount: amount,  
+                    },
+                    quantity: 1,  // Only one unit
+                },
+            ],
+            mode: 'payment',  // Mode is payment
+            success_url: `https://buy.stripe.com/test_5kA2bdeYx0Jr2jK000`, 
+            cancel_url: 'https://yourdomain.com/cancel',  
+            client_reference_id: investor._id.toString(),  // Pass the investor's ID as a string
+        });
+
+        investor.wallet.balance += amount;
+        investor.wallet.transactions.push({ type: 'recharge', amount });
+        
+        // Return the session ID to the frontend (for redirection to Stripe)
+        res.status(200).json({ PaymentLink: session.success_url, wallet: investor.wallet });
     } catch (err) {
-      res.status(400).json({ message: err.message });
+        console.error(err);
+        res.status(400).json({ message: err.message });
     }
-  };
+};
 
 const getInvestorPortfolio = async (req, res) => {
     try {
