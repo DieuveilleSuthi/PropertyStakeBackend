@@ -12,7 +12,7 @@ const investorSchema = mongoose.Schema(
                 {
                     type: {
                         type: String,
-                        enum: ['recharge', 'investment', 'income'],
+                        enum: ['recharge', 'investment', 'income', 'refund'],
                     },
                     amount: { type: Number },
                     date: { type: Date, default: Date.now },

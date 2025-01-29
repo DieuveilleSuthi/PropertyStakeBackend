@@ -39,20 +39,20 @@ const getAllInvestors = async (req, res) => {
 const rechargeWallet = async (req, res) => {
     const { id } = req.params;
     const { amount } = req.body;
-
+  
     try {
-        const investor = await Investor.findById(id);
-        if (!investor) return res.status(404).json({ message: 'Investor not found' });
-
-        investor.wallet.balance += amount;
-        investor.wallet.transactions.push({ type: 'recharge', amount });
-        await investor.save();
-
-        res.status(200).json(investor.wallet);
+      const investor = await Investor.findById(id).populate('wallet');
+      if (!investor) return res.status(404).json({ message: 'Investor not found' });
+  
+      investor.wallet.balance += amount;
+      investor.wallet.transactions.push({ type: 'recharge', amount });
+      await investor.wallet.save();
+  
+      res.status(200).json(investor.wallet);
     } catch (err) {
-        res.status(400).json({ message: err.message });
+      res.status(400).json({ message: err.message });
     }
-};
+  };
 
 const getInvestorPortfolio = async (req, res) => {
     try {
