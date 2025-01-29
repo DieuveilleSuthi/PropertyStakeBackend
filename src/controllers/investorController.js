@@ -46,6 +46,9 @@ const rechargeWallet = async (req, res) => {
         const investor = await Investor.findById(id);
         if (!investor) return res.status(404).json({ message: 'Investor not found' });
 
+        investor.wallet.balance += amount;
+        investor.wallet.transactions.push({ type: 'recharge', amount });
+        
         // Create a Checkout session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],  // Payment method type (only card in this case)
@@ -67,6 +70,7 @@ const rechargeWallet = async (req, res) => {
             client_reference_id: investor._id.toString(),  // Pass the investor's ID as a string
         });
 
+        //the two following line don't work without confirmation in stripe. So we will implement instead these before payement in order to complete the test
         investor.wallet.balance += amount;
         investor.wallet.transactions.push({ type: 'recharge', amount });
         
